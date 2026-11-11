@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"github.com/00nikita/distributed-task-scheduler/internal/database"
+	"github.com/00nikita/distributed-task-scheduler/internal/task"
 )
 
 func main(){
@@ -34,6 +35,13 @@ func main(){
 	defer conn.Close(ctx)
 
     log.Println("Connected to PostgreSQL successfully")
+
+    taskRepo := task.NewRepository(conn)
+	taskHandler := task.NewHandler(taskRepo)
+
+		mux.HandleFunc("POST /tasks", taskHandler.CreateTask)
+
+
 	log.Println("starting server in 8080")
 	if err := http.ListenAndServe(":8080", mux); err !=nil{
 		log.Fatal(err)

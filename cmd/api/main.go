@@ -39,7 +39,7 @@ func main(){
     taskRepo := task.NewRepository(conn)
 	taskHandler := task.NewHandler(taskRepo)
 
-		mux.HandleFunc("POST /tasks", taskHandler.CreateTask)
+    mux.HandleFunc("POST /tasks", taskHandler.CreateTask)
 
 
 	log.Println("starting server in 8080")

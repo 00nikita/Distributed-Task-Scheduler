@@ -39,3 +39,45 @@ func (r *Repository) CreateTask(ctx context.Context, task *Task) (int64, error) 
 
     return id, nil
 }
+
+func (r *Repository) GetDueTasks(ctx context.Context) ([]Task, error){
+    query := `
+       SELECT id, task_type, payload, status, scheduled_at
+       From tasks
+       WHERE status = 'PENDING' 
+        AND scheduled_at <= NOW()
+       ORDER BY scheduled_at
+       LIMIT 10
+    `
+    rows, err := r.db.Query(ctx, query)
+    ifr err!=nil {
+        return nil, err
+    }
+
+    defer rows.Close()
+
+    var tasks []Task
+
+    for rows.Next() {
+        var t Task
+
+        err := rows.Scan(
+            &t.ID,
+            &t.TaskType,
+            &t.Payload,
+            &t.Status,
+            &t.ScheduledAt,
+        )
+
+        if err!=nil {
+            return nil, err
+        }
+        tasks = append(tasks, t)
+    }
+
+        if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return tasks, nil
+}

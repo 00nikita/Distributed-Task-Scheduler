@@ -8,6 +8,7 @@ import (
 	"os"
 	"github.com/00nikita/distributed-task-scheduler/internal/database"
 	"github.com/00nikita/distributed-task-scheduler/internal/task"
+	"github.com/00nikita/distributed-task-scheduler/internal/scheduler"
 )
 
 func main(){
@@ -27,21 +28,23 @@ func main(){
 	}
 
 	ctx := context.Background()
-	conn, err := database.Connect(ctx, database_url)
+	pool, err := database.Connect(ctx, database_url)
 	if err!=nil{
 		log.Fatal("Failed to connect to database", err)
 	}
 
-	defer conn.Close(ctx)
+	defer pool.Close(ctx)
 
     log.Println("Connected to PostgreSQL successfully")
 
-    taskRepo := task.NewRepository(conn)
+    taskRepo := task.NewRepository(pool)
 	taskHandler := task.NewHandler(taskRepo)
 
     mux.HandleFunc("POST /tasks", taskHandler.CreateTask)
 
+    taskScheduler := scheduler.NewScheduler(taskRepo)
 
+	go taskScheduler.Start(ctx)
 	log.Println("starting server in 8080")
 	if err := http.ListenAndServe(":8080", mux); err !=nil{
 		log.Fatal(err)

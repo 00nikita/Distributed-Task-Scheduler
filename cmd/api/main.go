@@ -9,6 +9,7 @@ import (
 	"github.com/00nikita/distributed-task-scheduler/internal/database"
 	"github.com/00nikita/distributed-task-scheduler/internal/task"
 	"github.com/00nikita/distributed-task-scheduler/internal/scheduler"
+	"github.com/00nikita/distributed-task-scheduler/internal/worker"
 )
 
 func main(){
@@ -42,7 +43,9 @@ func main(){
 
     mux.HandleFunc("POST /tasks", taskHandler.CreateTask)
 
-    taskScheduler := scheduler.NewScheduler(taskRepo)
+	taskWorker := worker.NewWorker()
+
+    taskScheduler := scheduler.NewScheduler(taskRepo, taskWorker)
 
 	go taskScheduler.Start(ctx)
 	log.Println("starting server in 8080")
